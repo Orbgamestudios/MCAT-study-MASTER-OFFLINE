@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = __dirname;
-const PORT = 8765;
+const PORT = 8766;
 
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -13,6 +13,7 @@ const TYPES = {
   '.json': 'application/json; charset=utf-8',
   '.svg': 'image/svg+xml',
   '.png': 'image/png',
+  '.webp': 'image/webp',
   '.ico': 'image/x-icon',
   '.mp3': 'audio/mpeg',
   '.webmanifest': 'application/manifest+json; charset=utf-8',
