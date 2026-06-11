@@ -13,7 +13,7 @@
  * Bumping CACHE_VERSION drops the old cache on activate, so clients pick up
  * the new shell on their next launch. APP_VERSION must match index.html's ?v=.
  */
-const CACHE_VERSION = 'v5';
+const CACHE_VERSION = 'v6';
 const APP_VERSION = '174'; // keep in sync with app.js?v= in index.html
 const CACHE = 'mcat-offline-' + CACHE_VERSION;
 
