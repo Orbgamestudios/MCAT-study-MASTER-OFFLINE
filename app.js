@@ -2868,6 +2868,12 @@ function setConnectionsResult(date, result) {
   markStateDirty();
 }
 
+// Last successful server-stats payload, cached so the Stats tab still renders
+// the all-time / weekly / last-7-days numbers offline (they're server-computed
+// and otherwise unavailable without a connection).
+function getStatsCache() { try { return JSON.parse(localStorage.getItem('mcat:statsCache')) || null; } catch { return null; } }
+function setStatsCache(data) { try { localStorage.setItem('mcat:statsCache', JSON.stringify(data)); } catch {} }
+
 const DEFAULT_GITHUB = {
   token: '',
   repo: 'Orbgamestudios/MCAT-study-MASTER',
@@ -9580,7 +9586,13 @@ function DailyCarsCard() {
       .then((d) => { if (!cancelled) { setCarsCachePayload(today, d.payload); setPayload(d.payload); setState('ready'); } })
       .catch(async (e) => {
         if (cancelled) return;
-        if (e.status !== 404) { setErr(e.message); setState('error'); return; }
+        if (e.status !== 404) {
+          // Offline / server error — keep showing today's set if it was already
+          // downloaded, so CARS works without a connection.
+          const fallback = getCarsCachePayload(today);
+          if (fallback) { setPayload(fallback); setState('ready'); return; }
+          setErr(e.message); setState('error'); return;
+        }
         // Not generated yet. Generate if signed in with a key; else wait.
         if (!apiKey || !session) { setState('unavailable'); return; }
         setState('generating');
@@ -10301,7 +10313,13 @@ function DailyConnectionsCard() {
       })
       .catch(async (e) => {
         if (cancelled) return;
-        if (e.status !== 404) { setErr(e.message); setState('error'); return; }
+        if (e.status !== 404) {
+          // Offline / server error — keep showing today's puzzle if it was
+          // already downloaded, so Connections works without a connection.
+          const fallback = getConnectionsCachePayload(today);
+          if (fallback) { setPayload(fallback); setState('ready'); return; }
+          setErr(e.message); setState('error'); return;
+        }
         if (!apiKey || !session) { setState('unavailable'); return; }
         if (termPool.length < 24) { setState('needs-terms'); return; }
         setState('generating');
@@ -14618,7 +14636,8 @@ function SyncBar() {
 
 function ServerStatsView() {
   const { api, session, pendingSync, syncBusy } = useApp();
-  const [data, setData] = useState(null);
+  // Seed from the last cached payload so stats render instantly and survive offline.
+  const [data, setData] = useState(() => getStatsCache());
   const [err, setErr] = useState('');
   const [tick, setTick] = useState(0);
 
@@ -14627,8 +14646,10 @@ function ServerStatsView() {
     let cancelled = false;
     setErr('');
     api.meStats()
-      .then((d) => { if (!cancelled) setData(d); })
-      .catch((e) => { if (!cancelled) setErr(e.message); });
+      .then((d) => { if (!cancelled) { setData(d); setStatsCache(d); } })
+      // Offline / server error — only surface it if there's no cached payload
+      // to fall back on; otherwise keep showing the last downloaded stats.
+      .catch((e) => { if (!cancelled && !getStatsCache()) setErr(e.message); });
     return () => { cancelled = true; };
     // refetch when sync queue drains or user manually re-triggers
   }, [api, session?.username, pendingSync.length, syncBusy, tick]);
