@@ -8010,6 +8010,12 @@ function ShortAnswerQuestion({ item, onAnswer, onAnswerOverride, nextSlot }) {
     : null;
   const [exactCorrect, setExactCorrect] = useState(null);
 
+  const skip = () => {
+    setRevealed(true);
+    if (exact) setExactCorrect(false);
+    finalize(false);
+  };
+
   const submit = async () => {
     setRevealed(true);
     // Exact match: grade locally and finalize immediately (no Gemini).
@@ -8083,13 +8089,21 @@ function ShortAnswerQuestion({ item, onAnswer, onAnswerOverride, nextSlot }) {
         className="w-full bg-[var(--bg-elev)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm disabled:opacity-70"
       />
       {!revealed ? (
-        <button
-          onClick={submit}
-          disabled={!text.trim()}
-          className="bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] disabled:opacity-40 rounded-lg px-4 py-2 text-sm font-medium"
-        >
-          {apiKey || exact ? 'Submit answer' : 'Reveal answer'}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={submit}
+            disabled={!text.trim()}
+            className="bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] disabled:opacity-40 rounded-lg px-4 py-2 text-sm font-medium"
+          >
+            {apiKey || exact ? 'Submit answer' : 'Reveal answer'}
+          </button>
+          <button
+            onClick={skip}
+            className="border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text-strong)] hover:bg-[var(--bg-hover)] rounded-lg px-4 py-2 text-sm font-medium"
+          >
+            Skip
+          </button>
+        </div>
       ) : (
         <div className="bg-[var(--bg-elev-soft)] border border-[var(--border-soft)] rounded-lg p-4 space-y-3">
           {/* Exact-match verdict (deterministic, no Gemini). */}
@@ -11177,6 +11191,7 @@ function LessonGateQuiz({ kind, pool, need, onPass, onCancel }) {
   const [index, setIndex] = useState(0);
   const [answered, setAnswered] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
+  const [scoredCount, setScoredCount] = useState(0);
   const [done, setDone] = useState(false);
   const [showCalc, setShowCalc] = useState(false);
   const [calcMin, setCalcMin] = useState(false);
@@ -11184,10 +11199,11 @@ function LessonGateQuiz({ kind, pool, need, onPass, onCancel }) {
   const [showTable, setShowTable] = useState(false);
 
   const total = items.length;
+  const scoreTotal = items.filter((x) => x.mode !== 'short' && x.q?.mode !== 'short').length;
   const item = items[index];
   const label = kind === 'final' ? 'Final exam' : 'Checkpoint quiz';
 
-  const restart = () => { setRound((r) => r + 1); setIndex(0); setAnswered(false); setCorrectCount(0); setDone(false); };
+  const restart = () => { setRound((r) => r + 1); setIndex(0); setAnswered(false); setCorrectCount(0); setScoredCount(0); setDone(false); };
 
   if (total === 0) {
     return (
@@ -11200,12 +11216,12 @@ function LessonGateQuiz({ kind, pool, need, onPass, onCancel }) {
   }
 
   if (done) {
-    const passed = correctCount === total;
+    const passed = correctCount === scoreTotal;
     return (
       <div className="bg-[var(--bg-card)] border border-[var(--border-soft)] rounded-2xl p-6 space-y-4 text-center">
         <div className="text-4xl">{passed ? '🎉' : '🔁'}</div>
         <h2 className="font-semibold text-[var(--text-strong)]">{passed ? `${label} passed!` : 'Not quite — 100% required'}</h2>
-        <p className="text-sm text-[var(--text-muted)]">You scored {correctCount}/{total}.{passed ? '' : ' The quiz will reshuffle and restart from the top.'}</p>
+        <p className="text-sm text-[var(--text-muted)]">You scored {correctCount}/{scoreTotal}.{passed ? '' : ' The quiz will reshuffle and restart from the top.'}</p>
         <div className="flex items-center justify-center gap-2">
           {passed ? (
             <button onClick={onPass} className="px-4 py-2 rounded font-medium bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)]">
@@ -11223,8 +11239,11 @@ function LessonGateQuiz({ kind, pool, need, onPass, onCancel }) {
   const handleAnswer = ({ correct, isInterim }) => {
     if (isInterim || answered) return;
     setAnswered(true);
-    if (correct) setCorrectCount((c) => c + 1);
-    addAttempt({ question_id: item.id, mode: item.mode, file_id: item.file_id, chapter: item.chapter, subject: item.subject, correct });
+    if (item.mode !== 'short' && item.q?.mode !== 'short') {
+      setScoredCount((c) => c + 1);
+      if (correct) setCorrectCount((c) => c + 1);
+      addAttempt({ question_id: item.id, mode: item.mode, file_id: item.file_id, chapter: item.chapter, subject: item.subject, correct });
+    }
   };
   const next = () => {
     if (index + 1 >= total) { setDone(true); return; }
@@ -11257,7 +11276,7 @@ function LessonGateQuiz({ kind, pool, need, onPass, onCancel }) {
             aria-label="Open periodic table"
             className="text-sm px-2 py-1 border border-[var(--border)] rounded text-[var(--text-muted)] hover:text-[var(--text-strong)] hover:bg-[var(--bg-hover)]"
           >⚛️</button>
-          <span className="text-xs font-mono text-[var(--text-muted)]">{correctCount}/{index + (answered ? 1 : 0)}</span>
+          <span className="text-xs font-mono text-[var(--text-muted)]">{correctCount}/{scoredCount}</span>
           <button onClick={onCancel} className="text-xs text-[var(--text-muted)] hover:text-[var(--danger-text)] border border-[var(--border)] rounded px-2 py-1">Quit</button>
         </div>
       </div>
@@ -11365,6 +11384,13 @@ function ForceMasterModal({ lessonTitle, username, onVerifyPin, onConfirmMaster,
   );
 }
 
+function lessonGateQuizEligible(item) {
+  if (!item || item.mode === 'short' || item.q?.mode === 'short') return false;
+  if (item.mode === 'mc') return Array.isArray(item.q?.choices) && Number.isInteger(item.q?.correct_index);
+  if (item.mode === 'two_part') return !(item.q?.parts || []).some((p) => p && p.draw);
+  return false;
+}
+
 function LessonReader({ lesson, latestCorrect, completed, gate, quizPool, onBack, onQuizSection, onMarkComplete, onPassCheckpoint, onMaster, username, onVerifyPin }) {
   const sections = [...(lesson.sections || [])].sort((a, b) => (a.order || 0) - (b.order || 0));
   const statuses = sections.map((s) => lessonSectionStatus(s, latestCorrect));
@@ -11383,10 +11409,7 @@ function LessonReader({ lesson, latestCorrect, completed, gate, quizPool, onBack
   const poolThrough = (end) => {
     const ids = new Set();
     for (let k = 0; k < end; k++) for (const id of (sections[k].check_ids || [])) ids.add(id);
-    // Draw-it-yourself items are self-graded, so they don't belong in the
-    // auto-graded, 100%-to-pass checkpoint and final pools (they stay available
-    // in per-section study quizzes).
-    return quizPool.filter((x) => ids.has(x.id) && !(x.mode === 'two_part' && (x.q?.parts || []).some((p) => p && p.draw)));
+    return quizPool.filter((x) => ids.has(x.id) && lessonGateQuizEligible(x));
   };
   const startCheckpoint = (groupEndIndex) => {
     const pool = poolThrough(groupEndIndex);
@@ -11578,19 +11601,15 @@ function LessonsView({ onGoToStudy }) {
     await api.login({ username: session.username, pin });
   };
 
-  // Quiz pool for one chapter's lessons: MC plus two-part items (the gate quiz
-  // now renders each by mode). Short answer isn't auto-gradeable for a 100%
-  // checkpoint, so it stays excluded (buildPool 'mc' already omits it).
-  // The lesson quiz pool feeds the checkpoint and final-exam gates. It mixes the
-  // chapter's MC/two-part items with its short-answer items so sections whose
-  // checks are short-answer (e.g. the abbreviation drills) are gated too, and so
-  // short questions get randomly pulled into checkpoints and the final exam.
+  // Quiz pool for one chapter's checkpoint/final gates: MC plus two-part items.
+  // Short answer stays available in per-section study quizzes, but not in the
+  // cumulative 100%-required gates.
   const lessonQuizPoolFor = (chapterId) => {
     const fid = chapterToFile[chapterId];
     if (!fid) return [];
     const scope = { fileIds: new Set([fid]) };
     const ctx = { files, questions, extractions, attempts };
-    return [...buildPool(ctx, 'mc', scope), ...buildPool(ctx, 'short', scope)];
+    return buildPool(ctx, 'mc', scope);
   };
 
   const downloadLesson = async (chapterId) => {
