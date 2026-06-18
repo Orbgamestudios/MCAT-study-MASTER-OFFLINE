@@ -8650,6 +8650,14 @@ function QuizRunner({ items, onExit, onPause }) {
   const exitQuiz = (r, time) => { try { flushSync(); } catch {} onExit(r, time); };
   const [index, setIndex] = useState(0);
   const [results, setResults] = useState([]); // [{item, correct, user_answer}]
+  const resultsRef = useRef([]);
+  const setQuizResults = (updater) => {
+    setResults((prev) => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      resultsRef.current = next;
+      return next;
+    });
+  };
   const [answered, setAnswered] = useState(false);
   const timer = useQuizTimer();
 
@@ -8686,7 +8694,7 @@ function QuizRunner({ items, onExit, onPause }) {
         user_answer,
       });
     }
-    setResults((r) => [...r, { item, correct, user_answer }]);
+    setQuizResults((r) => [...r, { item, correct, user_answer }]);
   };
 
   // Short-answer Override pathway. Patches the most recent attempt for
@@ -8696,7 +8704,7 @@ function QuizRunner({ items, onExit, onPause }) {
   const handleAnswerOverride = ({ correct }) => {
     if (!answered) return;
     updateLastAttempt(item.id, { correct: !!correct });
-    setResults((prev) => {
+    setQuizResults((prev) => {
       const next = prev.slice();
       for (let i = next.length - 1; i >= 0; i--) {
         if (next[i].item?.id === item.id) {
@@ -8738,7 +8746,7 @@ function QuizRunner({ items, onExit, onPause }) {
           >⚛️</button>
           <span className="text-xs font-mono text-[var(--text-muted)]">{timer.display}</span>
           <button
-            onClick={() => exitQuiz(results, timer.display)}
+            onClick={() => exitQuiz(resultsRef.current, timer.display)}
             className="text-xs text-[var(--text-muted)] hover:text-[var(--danger-text)] border border-[var(--border)] rounded px-2 py-1"
           >
             End quiz
@@ -8757,7 +8765,7 @@ function QuizRunner({ items, onExit, onPause }) {
         {(() => {
           const nextBtn = answered ? (
             <button
-              onClick={isLast ? () => exitQuiz([...results], timer.display) : next}
+              onClick={isLast ? () => exitQuiz([...resultsRef.current], timer.display) : next}
               className="bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] rounded px-4 py-2 text-sm font-medium shrink-0"
             >
               {isLast ? 'See results' : 'Next →'}
@@ -11185,13 +11193,14 @@ function LessonSection({ sec, status, onQuiz, locked }) {
 // score (100%) to pass; any miss means the whole quiz restarts with a fresh
 // shuffle. Used for both per-group checkpoints (15 Q) and the final exam (30 Q).
 function LessonGateQuiz({ kind, pool, need, onPass, onCancel }) {
-  const { addAttempt } = useApp();
+  const { addAttempt, updateLastAttempt } = useApp();
   const [round, setRound] = useState(0);
   const items = useMemo(() => shuffle(pool).slice(0, need), [pool, need, round]);
   const [index, setIndex] = useState(0);
   const [answered, setAnswered] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
   const [scoredCount, setScoredCount] = useState(0);
+  const [answers, setAnswers] = useState({});
   const [done, setDone] = useState(false);
   const [showCalc, setShowCalc] = useState(false);
   const [calcMin, setCalcMin] = useState(false);
@@ -11199,11 +11208,11 @@ function LessonGateQuiz({ kind, pool, need, onPass, onCancel }) {
   const [showTable, setShowTable] = useState(false);
 
   const total = items.length;
-  const scoreTotal = items.filter((x) => x.mode !== 'short' && x.q?.mode !== 'short').length;
+  const scoreTotal = items.length;
   const item = items[index];
   const label = kind === 'final' ? 'Final exam' : 'Checkpoint quiz';
 
-  const restart = () => { setRound((r) => r + 1); setIndex(0); setAnswered(false); setCorrectCount(0); setScoredCount(0); setDone(false); };
+  const restart = () => { setRound((r) => r + 1); setIndex(0); setAnswered(false); setCorrectCount(0); setScoredCount(0); setAnswers({}); setDone(false); };
 
   if (total === 0) {
     return (
@@ -11236,14 +11245,24 @@ function LessonGateQuiz({ kind, pool, need, onPass, onCancel }) {
     );
   }
 
-  const handleAnswer = ({ correct, isInterim }) => {
+  const handleAnswer = ({ correct, user_answer, isInterim }) => {
     if (isInterim || answered) return;
     setAnswered(true);
-    if (item.mode !== 'short' && item.q?.mode !== 'short') {
-      setScoredCount((c) => c + 1);
-      if (correct) setCorrectCount((c) => c + 1);
-      addAttempt({ question_id: item.id, mode: item.mode, file_id: item.file_id, chapter: item.chapter, subject: item.subject, correct });
-    }
+    setAnswers((prev) => ({ ...prev, [item.id]: !!correct }));
+    setScoredCount((c) => c + 1);
+    if (correct) setCorrectCount((c) => c + 1);
+    addAttempt({ question_id: item.id, mode: item.mode, file_id: item.file_id, chapter: item.chapter, subject: item.subject, correct, user_answer });
+  };
+  const handleAnswerOverride = ({ correct }) => {
+    if (!answered) return;
+    const nextCorrect = !!correct;
+    updateLastAttempt(item.id, { correct: nextCorrect });
+    setAnswers((prev) => {
+      const previous = prev[item.id];
+      if (previous === undefined || previous === nextCorrect) return prev;
+      setCorrectCount((c) => c + (nextCorrect ? 1 : -1));
+      return { ...prev, [item.id]: nextCorrect };
+    });
   };
   const next = () => {
     if (index + 1 >= total) { setDone(true); return; }
@@ -11288,7 +11307,7 @@ function LessonGateQuiz({ kind, pool, need, onPass, onCancel }) {
         {item.mode === 'two_part'
           ? <TwoPartQuestion key={item.id} item={item} onAnswer={handleAnswer} nextSlot={nextBtn} />
           : item.mode === 'short'
-            ? <ShortAnswerQuestion key={item.id} item={item} onAnswer={handleAnswer} nextSlot={nextBtn} />
+            ? <ShortAnswerQuestion key={item.id} item={item} onAnswer={handleAnswer} onAnswerOverride={handleAnswerOverride} nextSlot={nextBtn} />
             : <MCQuestion key={item.id} item={item} onAnswer={handleAnswer} nextSlot={nextBtn} />}
       </div>
       {showCalc && (
@@ -11385,7 +11404,8 @@ function ForceMasterModal({ lessonTitle, username, onVerifyPin, onConfirmMaster,
 }
 
 function lessonGateQuizEligible(item) {
-  if (!item || item.mode === 'short' || item.q?.mode === 'short') return false;
+  if (!item) return false;
+  if (item.mode === 'short' || item.q?.mode === 'short') return true;
   if (item.mode === 'mc') return Array.isArray(item.q?.choices) && Number.isInteger(item.q?.correct_index);
   if (item.mode === 'two_part') return !(item.q?.parts || []).some((p) => p && p.draw);
   return false;
@@ -11601,15 +11621,13 @@ function LessonsView({ onGoToStudy }) {
     await api.login({ username: session.username, pin });
   };
 
-  // Quiz pool for one chapter's checkpoint/final gates: MC plus two-part items.
-  // Short answer stays available in per-section study quizzes, but not in the
-  // cumulative 100%-required gates.
+  // Quiz pool for one chapter's checkpoint/final gates: MC, two-part, and short answer.
   const lessonQuizPoolFor = (chapterId) => {
     const fid = chapterToFile[chapterId];
     if (!fid) return [];
     const scope = { fileIds: new Set([fid]) };
     const ctx = { files, questions, extractions, attempts };
-    return buildPool(ctx, 'mc', scope);
+    return [...buildPool(ctx, 'mc', scope), ...buildPool(ctx, 'short', scope)];
   };
 
   const downloadLesson = async (chapterId) => {
