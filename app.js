@@ -12685,6 +12685,7 @@ function SettingsPanel({ onClose }) {
     ['duo', '🗿', 'Rio'],
     ['tropical', '🌴', 'Tropical'],
     ['madison', '🏛️', 'Madison'],
+    ['gambit', '🃏', 'Gambit'],
   ];
   const modeOpts = [
     ['light', '☀️', 'Light'],
@@ -12734,13 +12735,14 @@ function SettingsPanel({ onClose }) {
           <label className="flex items-center justify-between gap-3 bg-[var(--bg-elev-soft)] border border-[var(--border-soft)] rounded-lg px-3 py-2.5 cursor-pointer">
             <div className="text-sm min-w-0">
               <div className="text-[var(--text)]">
-                {palette === 'cold' ? '❄️' : palette === 'warm' ? '🍂' : palette === 'duo' ? '⛰️' : palette === 'madison' ? '🏛️' : '🌴'} Dynamic background
+                {palette === 'cold' ? '❄️' : palette === 'warm' ? '🍂' : palette === 'duo' ? '⛰️' : palette === 'madison' ? '🏛️' : palette === 'gambit' ? '🃏' : '🌴'} Dynamic background
               </div>
               <div className="text-[11px] text-[var(--text-faint)] mt-0.5">
                 {palette === 'cold' ? 'Winter snow + mountain range background.'
                   : palette === 'warm' ? 'Fall trees + mountain range background.'
                   : palette === 'duo' ? 'Rio de Janeiro with Christ the Redeemer.'
                   : palette === 'madison' ? 'Madison, WI skyline at night with the Capitol dome over Lake Monona — lit windows, occasional shooting stars, cars on Lakeshore Drive, and slow drifting clouds.'
+                  : palette === 'gambit' ? 'Charged playing cards, violet kinetic energy, and drifting neon sparks.'
                   : 'Tropical beach with palm trees, breaking waves, and a crab that wanders past once in a while.'}{' '}
                 Follows your light/dark mode.
               </div>
