@@ -49,7 +49,7 @@
 <link rel="manifest" href="manifest.webmanifest" />
 <!-- Vendored locally (was unpkg / cdn.tailwindcss.com) so the app loads with zero
      network — required for the offline PWA. Update with vendor/refresh.ps1. -->
-<link rel="stylesheet" href="legacy-tailwind.css?v=184" />
+<link rel="stylesheet" href="legacy-tailwind.css?v=185" />
 <script>
   (function () {
     var match = /iP(?:ad|hone|od).*OS (\d+)_/.exec(navigator.userAgent);
@@ -60,7 +60,7 @@
     function writeScript(src) {
       document.write('<script src="' + src + '"><\/script>');
     }
-    if (legacy) writeScript('legacy-polyfills.js?v=184');
+    if (legacy) writeScript('legacy-polyfills.js?v=185');
     writeScript('vendor/react.development.js');
     writeScript('vendor/react-dom.development.js');
     if (!legacy) {
@@ -884,7 +884,7 @@
 </script>
 <script>
   (function () {
-    var v = '184';
+    var v = '185';
     if (window.__MCAT_LEGACY_BOOT__) {
       document.write('<script src="app.legacy.js?v=' + v + '"><\/script>');
     } else {
