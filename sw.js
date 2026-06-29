@@ -13,8 +13,8 @@
  * Bumping CACHE_VERSION drops the old cache on activate, so clients pick up
  * the new shell on their next launch. APP_VERSION must match index.html's ?v=.
  */
-const CACHE_VERSION = 'v21';
-const APP_VERSION = '186'; // keep in sync with app.js?v= in index.html
+const CACHE_VERSION = 'v22';
+const APP_VERSION = '187'; // keep in sync with app.js?v= in index.html
 const CACHE = 'mcat-offline-' + CACHE_VERSION;
 
 const PRECACHE = [
@@ -73,6 +73,7 @@ self.addEventListener('fetch', (event) => {
   // worker are cross-origin and must always hit the network (and fail
   // gracefully offline, which the app already handles).
   if (url.origin !== self.location.origin) return;
+  if (url.pathname.startsWith('/api/')) return;
 
   event.respondWith(
     caches.match(req, { ignoreSearch: true }).then((cached) => {
