@@ -13,8 +13,8 @@
  * Bumping CACHE_VERSION drops the old cache on activate, so clients pick up
  * the new shell on their next launch. APP_VERSION must match index.html's ?v=.
  */
-const CACHE_VERSION = 'v17';
-const APP_VERSION = '182'; // keep in sync with app.js?v= in index.html
+const CACHE_VERSION = 'v18';
+const APP_VERSION = '183'; // keep in sync with app.js?v= in index.html
 const CACHE = 'mcat-offline-' + CACHE_VERSION;
 
 const PRECACHE = [
@@ -22,6 +22,9 @@ const PRECACHE = [
   'index.html',
   'manifest.webmanifest',
   'app.js?v=' + APP_VERSION,
+  'app.legacy.js?v=' + APP_VERSION,
+  'legacy-polyfills.js?v=' + APP_VERSION,
+  'legacy-tailwind.css?v=' + APP_VERSION,
   'apple-touch-icon-v2.png',
   'icon-512-v2.png',
   'vendor/react.development.js',
