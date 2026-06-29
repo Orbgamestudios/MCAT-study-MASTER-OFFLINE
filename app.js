@@ -9158,6 +9158,13 @@ const FREE_PASSAGE_SECTIONS = [
     url: 'https://www.khanacademy.org/test-prep/mcat/social-sciences-practice',
     subjects: ['Behavioral Science', 'Psychology', 'Sociology'],
   },
+  {
+    key: 'cars',
+    label: 'CARS',
+    title: 'Critical Analysis and Reasoning',
+    url: 'https://www.khanacademy.org/test-prep/mcat/critical-analysis-and-reasoning-skills-practice-questions',
+    subjects: ['CARS'],
+  },
 ];
 
 function FreePassagePractice() {
@@ -9198,7 +9205,7 @@ function FreePassagePractice() {
           Recommended: {recommended.label}
         </button>
       </div>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         {sectionStats.map((section) => (
           <button
             key={section.key}
