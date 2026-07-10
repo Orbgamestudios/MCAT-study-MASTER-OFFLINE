@@ -13,8 +13,8 @@
  * Bumping CACHE_VERSION drops the old cache on activate, so clients pick up
  * the new shell on their next launch. APP_VERSION must match index.html's ?v=.
  */
-const CACHE_VERSION = 'v47';
-const APP_VERSION = '214'; // keep in sync with app.js?v= in index.html
+const CACHE_VERSION = 'v48';
+const APP_VERSION = '218'; // keep in sync with app.js?v= in index.html
 const CACHE = 'mcat-offline-' + CACHE_VERSION;
 
 const PRECACHE = [
@@ -22,6 +22,8 @@ const PRECACHE = [
   'index.html',
   'manifest.webmanifest',
   'MCAT_PASSAGE_GENERATION.md',
+  'mcat-max-passages.js?v=' + APP_VERSION,
+  'mcat-max-batch-01.js?v=' + APP_VERSION,
   'app.js?v=' + APP_VERSION,
   'app.legacy.js?v=' + APP_VERSION,
   'legacy-polyfills.js?v=' + APP_VERSION,
