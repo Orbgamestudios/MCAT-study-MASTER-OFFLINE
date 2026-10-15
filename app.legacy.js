@@ -8572,11 +8572,11 @@ function ApiKeyGate() {
         while (1) switch (_context40.p = _context40.n) {
           case 0:
             trimmed = val.trim();
-            if (trimmed.startsWith('AIza')) {
+            if (trimmed) {
               _context40.n = 1;
               break;
             }
-            setErr('That does not look like a Google AI API key (should start with AIza).');
+            setErr('Enter a Gemini API key.');
             return _context40.a(2);
           case 1:
             setBusy(true);
@@ -8629,7 +8629,7 @@ function ApiKeyGate() {
     onKeyDown: function onKeyDown(e) {
       return e.key === 'Enter' && !busy && save();
     },
-    placeholder: "AIza...",
+    placeholder: "Paste your Gemini API key",
     className: "flex-1 bg-[var(--bg-elev)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-[var(--accent-border)]",
     autoFocus: true
   }), /*#__PURE__*/React.createElement("button", {
@@ -21286,13 +21286,6 @@ function SettingsPanel(_ref143) {
             setApiKey('');
             return _context64.a(2);
           case 1:
-            if (trimmed.startsWith('AIza')) {
-              _context64.n = 2;
-              break;
-            }
-            setKeyErr('Google AI keys start with AIza.');
-            return _context64.a(2);
-          case 2:
             setKeyBusy(true);
             setKeyErr('');
             storage.set(KEYS.apiKey, trimmed);
@@ -21482,7 +21475,7 @@ function SettingsPanel(_ref143) {
       setKeyVal(e.target.value);
       setKeyErr('');
     },
-    placeholder: apiKey ? "current: \u2026".concat(apiKey.slice(-6)) : 'AIza...',
+    placeholder: apiKey ? "current: \u2026".concat(apiKey.slice(-6)) : 'Paste your Gemini API key',
     className: "flex-1 bg-[var(--bg-elev)] border border-[var(--border)] rounded px-3 py-2 text-sm font-mono focus:outline-none focus:border-[var(--accent-border)]"
   }), /*#__PURE__*/React.createElement("button", {
     onClick: function onClick() {
@@ -24894,7 +24887,7 @@ function Shell() {
       flexShrink: 0
     }
   }), /*#__PURE__*/React.createElement("main", {
-    className: "flex-1 px-3 pb-3 pt-[17px] sm:px-6 sm:pb-6 sm:pt-[29px] overflow-x-hidden"
+    className: "flex-1 px-3 pb-3 pt-2 sm:px-6 sm:pb-6 sm:pt-3 overflow-x-hidden"
   }, /*#__PURE__*/React.createElement("div", {
     className: "max-w-3xl mx-auto"
   }, tabIs('home') && /*#__PURE__*/React.createElement("div", tabWrap('home', ''), /*#__PURE__*/React.createElement(HomeView, {

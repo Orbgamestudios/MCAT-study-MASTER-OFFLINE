@@ -5695,8 +5695,8 @@ function ApiKeyGate() {
 
   const save = async () => {
     const trimmed = val.trim();
-    if (!trimmed.startsWith('AIza')) {
-      setErr('That does not look like a Google AI API key (should start with AIza).');
+    if (!trimmed) {
+      setErr('Enter a Gemini API key.');
       return;
     }
     setBusy(true); setErr('');
@@ -5727,7 +5727,7 @@ function ApiKeyGate() {
             value={val}
             onChange={(e) => { setVal(e.target.value); setErr(''); }}
             onKeyDown={(e) => e.key === 'Enter' && !busy && save()}
-            placeholder="AIza..."
+            placeholder="Paste your Gemini API key"
             className="flex-1 bg-[var(--bg-elev)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-[var(--accent-border)]"
             autoFocus
           />
@@ -13864,10 +13864,6 @@ function SettingsPanel({ onClose }) {
   const saveKey = async () => {
     const trimmed = keyVal.trim();
     if (!trimmed) { setApiKey(''); return; }
-    if (!trimmed.startsWith('AIza')) {
-      setKeyErr('Google AI keys start with AIza.');
-      return;
-    }
     setKeyBusy(true); setKeyErr('');
     storage.set(KEYS.apiKey, trimmed);
     try {
@@ -14044,7 +14040,7 @@ function SettingsPanel({ onClose }) {
             type={keyShow ? 'text' : 'password'}
             value={keyVal}
             onChange={(e) => { setKeyVal(e.target.value); setKeyErr(''); }}
-            placeholder={apiKey ? `current: …${apiKey.slice(-6)}` : 'AIza...'}
+            placeholder={apiKey ? `current: …${apiKey.slice(-6)}` : 'Paste your Gemini API key'}
             className="flex-1 bg-[var(--bg-elev)] border border-[var(--border)] rounded px-3 py-2 text-sm font-mono focus:outline-none focus:border-[var(--accent-border)]"
           />
           <button onClick={() => setKeyShow((s) => !s)} className="px-3 text-xs border border-[var(--border)] rounded hover:bg-[var(--bg-hover)]">
@@ -16301,7 +16297,7 @@ function Shell() {
       {/* Spacer pushes content below the fixed header */}
       <div style={{ height: headerH, flexShrink: 0 }} />
 
-      <main className="flex-1 px-3 pb-3 pt-[17px] sm:px-6 sm:pb-6 sm:pt-[29px] overflow-x-hidden">
+      <main className="flex-1 px-3 pb-3 pt-2 sm:px-6 sm:pb-6 sm:pt-3 overflow-x-hidden">
         <div className="max-w-3xl mx-auto">
           {tabIs('home') && (
             <div {...tabWrap('home', '')}>
