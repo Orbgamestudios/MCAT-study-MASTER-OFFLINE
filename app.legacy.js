@@ -47,7 +47,7 @@ var _React = React,
   useContext = _React.useContext;
 
 // ---------- config ----------
-var MODEL = 'gemini-2.5-flash';
+var MODEL = 'gemini-3.8-flash';
 var GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta';
 var UPLOAD_BASE = 'https://generativelanguage.googleapis.com/upload/v1beta';
 
@@ -5167,7 +5167,7 @@ function makeClient(getKey) {
       return _regenerator().w(function (_context4) {
         while (1) switch (_context4.n) {
           case 0:
-            contents = _ref7.contents, systemInstruction = _ref7.systemInstruction, responseSchema = _ref7.responseSchema, _ref7$maxOutputTokens = _ref7.maxOutputTokens, maxOutputTokens = _ref7$maxOutputTokens === void 0 ? 32768 : _ref7$maxOutputTokens, _ref7$disableThinking = _ref7.disableThinking, disableThinking = _ref7$disableThinking === void 0 ? false : _ref7$disableThinking;
+            contents = _ref7.contents, systemInstruction = _ref7.systemInstruction, responseSchema = _ref7.responseSchema, _ref7$maxOutputTokens = _ref7.maxOutputTokens, maxOutputTokens = _ref7$maxOutputTokens === void 0 ? 65536 : _ref7$maxOutputTokens, _ref7$disableThinking = _ref7.disableThinking, disableThinking = _ref7$disableThinking === void 0 ? false : _ref7$disableThinking;
             generationConfig = {
               maxOutputTokens
             };
@@ -20258,7 +20258,10 @@ function LessonsView(_ref120) {
     className: "font-semibold text-[var(--text-strong)]"
   }, "Lessons"), /*#__PURE__*/React.createElement("p", {
     className: "text-sm text-[var(--text-muted)] mt-1"
-  }, "Download a guided lesson and work through it in groups of ", LESSON_GROUP_SIZE, " sections. Each group is gated by a ", LESSON_CHECKPOINT_Q, "-question checkpoint (100% to advance), and a ", LESSON_FINAL_Q, "-question final exam masters the chapter.")), error && /*#__PURE__*/React.createElement("div", {
+  }, "Download a guided lesson and work through it in groups of ", LESSON_GROUP_SIZE, " sections. Each group is gated by a ", LESSON_CHECKPOINT_Q, "-question checkpoint (100% to advance), and a ", LESSON_FINAL_Q, "-question final exam masters the chapter."), /*#__PURE__*/React.createElement("button", {
+    onClick: onGoToStudy,
+    className: "mt-3 text-xs px-3 py-1.5 rounded font-medium bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)]"
+  }, "Study practice")), error && /*#__PURE__*/React.createElement("div", {
     className: "bg-red-500/10 border border-red-500/30 rounded-xl p-3 text-xs text-red-400"
   }, error), inProgress.length > 0 && /*#__PURE__*/React.createElement("div", {
     className: "bg-[var(--bg-card)] border border-[var(--border-soft)] rounded-2xl p-5 space-y-3"
@@ -24733,7 +24736,7 @@ function Shell() {
     };
   }, []);
   var hasLibrary = apiKey || readOnly || session;
-  var tabs = [['lessons', 'Lessons'], ['study', 'Study'], ['passages', 'Passage'], ['home', 'Home'], ['stats', 'Stats'], ['banks', 'Bank']];
+  var tabs = [['lessons', 'Lessons'], ['passages', 'Passage'], ['home', 'Home'], ['stats', 'Stats'], ['banks', 'Bank']];
   useEffect(function () {
     if (readOnly) setTab('home');else if (!hasLibrary) setTab('home');
   }, [readOnly, hasLibrary]);
@@ -24748,7 +24751,7 @@ function Shell() {
     var _ref174 = _slicedToArray(_ref173, 1),
       k = _ref174[0];
     return k;
-  });
+  }).concat(['study']);
 
   // Per-tab scroll memory — ref, not state, so it never persists across
   // reloads. Switching saves the leaving tab's scrollY and restores the

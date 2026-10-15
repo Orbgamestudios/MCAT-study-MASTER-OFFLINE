@@ -1,7 +1,7 @@
 const { useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef, createContext, useContext } = React;
 
 // ---------- config ----------
-const MODEL = 'gemini-2.5-flash';
+const MODEL = 'gemini-3.8-flash';
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta';
 const UPLOAD_BASE = 'https://generativelanguage.googleapis.com/upload/v1beta';
 
@@ -3852,7 +3852,7 @@ function makeClient(getKey) {
     return true;
   }
 
-  async function generate({ contents, systemInstruction, responseSchema, maxOutputTokens = 32768, disableThinking = false }) {
+  async function generate({ contents, systemInstruction, responseSchema, maxOutputTokens = 65536, disableThinking = false }) {
     const generationConfig = { maxOutputTokens };
     if (responseSchema) {
       generationConfig.responseMimeType = 'application/json';
@@ -13106,10 +13106,15 @@ function LessonsView({ onGoToStudy }) {
   return (
     <div className="space-y-4">
       <div className="bg-[var(--bg-card)] border border-[var(--border-soft)] rounded-2xl p-5">
-        <h2 className="font-semibold text-[var(--text-strong)]">Lessons</h2>
-        <p className="text-sm text-[var(--text-muted)] mt-1">
-          Download a guided lesson and work through it in groups of {LESSON_GROUP_SIZE} sections. Each group is gated by a {LESSON_CHECKPOINT_Q}-question checkpoint (100% to advance), and a {LESSON_FINAL_Q}-question final exam masters the chapter.
-        </p>
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div>
+            <h2 className="font-semibold text-[var(--text-strong)]">Lessons</h2>
+            <p className="text-sm text-[var(--text-muted)] mt-1">
+              Download a guided lesson and work through it in groups of {LESSON_GROUP_SIZE} sections. Each group is gated by a {LESSON_CHECKPOINT_Q}-question checkpoint (100% to advance), and a {LESSON_FINAL_Q}-question final exam masters the chapter.
+            </p>
+          </div>
+          <button onClick={onGoToStudy} className="shrink-0 text-xs px-3 py-1.5 rounded font-medium bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)]">Study practice</button>
+        </div>
       </div>
 
       {error && (
@@ -16163,14 +16168,14 @@ function Shell() {
   }, []);
 
   const hasLibrary = apiKey || readOnly || session;
-  const tabs = [['lessons', 'Lessons'], ['study', 'Study'], ['passages', 'Passage'], ['home', 'Home'], ['stats', 'Stats'], ['banks', 'Bank']];
+  const tabs = [['lessons', 'Lessons'], ['passages', 'Passage'], ['home', 'Home'], ['stats', 'Stats'], ['banks', 'Bank']];
   useEffect(() => { if (readOnly) setTab('home'); else if (!hasLibrary) setTab('home'); }, [readOnly, hasLibrary]);
   useEffect(() => { setProfileUser(null); }, [tab]);
 
   const tabRef = useRef(tab);
   useEffect(() => { tabRef.current = tab; }, [tab]);
 
-  const tabKeys = tabs.map(([k]) => k);
+  const tabKeys = [...tabs.map(([k]) => k), 'study'];
 
   // Per-tab scroll memory — ref, not state, so it never persists across
   // reloads. Switching saves the leaving tab's scrollY and restores the
